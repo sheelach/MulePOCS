@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<configuration-properties doc:name="Configuration properties" doc:id="02ff48de-daf5-40ff-887b-32f995302b3f" file="config/dev.yaml" />
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="549e078a-941c-48a0-ae7d-d341a37b8dd4" >
+		<http:listener-connection host="${http.host}" port="${http.port}" />
+	</http:listener-config>
+	<validation:config name="Validation_Config" doc:name="Validation Config" doc:id="839e7d4a-d34a-45d8-a463-d1cbcfa11f6a" />
+	<flow name="javaclasspocFlow" doc:id="ef96e475-a684-4fe9-a7d3-02755d7692f0" >
+		<http:listener doc:name="GET /java" doc:id="3fc4d0c0-fefe-4b77-b8b0-702330ae457f" config-ref="HTTP_Listener_config" path="/java" allowedMethods="GET">
+			<http:error-response statusCode="#[vars.httpStatus]">
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<java:invoke-static doc:name="Invoke Java String Concat Static Method" doc:id="ed5040bc-3c51-4352-b7a1-43156c15e357" class="javaclasspoc.demo" method="msg(java.lang.String,java.lang.String)">
+			<java:args><![CDATA[#[%dw 2.0
+output application/json
+---
+{
+	"s1" : attributes.queryParams.fname,
+	"s2" : attributes.queryParams.lname
+}]]]></java:args>
+		</java:invoke-static>
+		<ee:transform doc:name="Transform Object to JSON" doc:id="f43f38ad-5f6f-4513-8e6f-20e5bdd52ad0">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="End Log" doc:id="0bcdc6a4-cefc-4e2a-ad2b-e0ff19525513" message="========Process completed==================#[payload]" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="aefef90b-42b2-43a2-9b90-bc929e76a22f" type="ANY">
+				<ee:transform doc:name="error.description" doc:id="f8187e50-d71e-4cab-a57b-c660ce6dbb5a">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+
+output application/json
+---
+{
+	"message" : error.description
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-variable value="400" doc:name="httpStatus" doc:id="dffeb938-31ee-4507-97a2-c930876b9a60" variableName="httpStatus" />
+			</on-error-continue>
+		</error-handler>
+	</flow>
+</mule>
