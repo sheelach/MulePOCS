@@ -18,6 +18,8 @@ http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mu
 				<http:body ><![CDATA[#[payload]]]></http:body>
 			</http:error-response>
 		</http:listener>
+		<validation:is-not-blank-string doc:name="First name is not blank " doc:id="c90863ac-f5f5-4749-8c9f-bc18b57c4b8f" value="#[attributes.queryParams.fname]" message="First Name cannot be blank"/>
+		<validation:is-not-blank-string doc:name="Last name is not blank" doc:id="8efdf488-5d13-4955-8ba8-0721c7c10f1c" value="#[attributes.queryParams.lname]" message="Last Name cannot be blank"/>
 		<java:invoke-static doc:name="Invoke Java String Concat Static Method" doc:id="ed5040bc-3c51-4352-b7a1-43156c15e357" class="javaclasspoc.demo" method="msg(java.lang.String,java.lang.String)">
 			<java:args><![CDATA[#[%dw 2.0
 output application/json

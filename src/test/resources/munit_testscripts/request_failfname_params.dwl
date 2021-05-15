@@ -1,0 +1,6 @@
+{
+	"queryParams":{
+		"fName":"",
+		"lName":"Mule"
+	}
+}

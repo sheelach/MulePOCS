@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="javaclasspoc-test-suite.xml" />
+	<munit:test name="javaclasspoc-happypath" doc:id="05d169eb-eaa8-40af-a3e6-1f7ec031eb69" description="Test">
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="58d331e3-1b0b-4f51-8997-021f94d57413" >
+				<munit:attributes value="#[readUrl('classpath://munit_testscripts/request_params.dwl')]" />
+			</munit:set-event>
+			<flow-ref doc:name="Flow-ref to javaclasspocFlow" doc:id="a89a4a73-3a83-4669-b9d3-cf3473409a5f" name="javaclasspocFlow"/>
+		</munit:execution>
+		<munit:validation >
+			<munit-tools:assert-equals doc:name="Assert equals" doc:id="d87a042f-5370-496b-92ef-a48d78c65e93" actual='#["Hello MaxMULE"]' expected='#["Hello MaxMULE"]' message="Message is not expected one"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="javaclasspoc-failfnametestcase" doc:id="2efdf9c5-4855-4c5b-8c68-57aa1b32d785" >
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="c7fd37a6-8dff-46dc-afa5-d8df6de393c1" >
+				<munit:attributes value="#[readUrl('classpath://munit_testscripts/request_failfname_params.dwl')]" />
+			</munit:set-event>
+		</munit:execution>
+		<munit:validation >
+			<flow-ref doc:name="Flow-ref to javaclasspocFlow" doc:id="accb9856-7dd8-4ba7-8732-1d279127a0a6" name="javaclasspocFlow" />
+			<munit-tools:assert-that doc:name="First Name Assert that" doc:id="14e45060-5584-4fc1-9a86-5b0f926bb856" expression="#[payload]" is='#[MunitTools::equalTo({&#10;    "message": "First Name cannot be blank"&#10;})]' message="Issue with First name validation test case"/>
+		</munit:validation>
+	</munit:test>
+	<munit:test name="javaclasspoc-faillnametestcase" doc:id="f828c7aa-9766-409a-96f0-598dc2252d2a" >
+		<munit:behavior >
+			<munit-tools:spy doc:name="Spy" doc:id="f49d89f7-96e0-4159-b0eb-cd16fdcef5e5" processor="validation:is-not-blank-string">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="#[attributes.queryParams.lname]" attributeName="value" />
+				</munit-tools:with-attributes>
+				<munit-tools:before-call >
+					<logger level="INFO" doc:name="Before Logger" doc:id="a2f7ede7-a0de-4e96-9324-11f5cf1ad163" message="======Before #[attributes.queryParams.lname]========================="/>
+				</munit-tools:before-call>
+				<munit-tools:after-call >
+					<logger level="INFO" doc:name="After Logger" doc:id="6858e66a-bae5-4981-b5c7-d54c1e512642" message="======After #[attributes.queryParams.lname]========================="/>
+				</munit-tools:after-call>
+			</munit-tools:spy>
+		</munit:behavior>
+		<munit:execution >
+			<munit:set-event doc:name="Set Event" doc:id="c007fcec-4f15-4ee0-81e7-ba7eec0d3206">
+				<munit:attributes value="#[{queryParams:{fname:'Max',lname:''}}]" />
+			</munit:set-event>
+		</munit:execution>
+		<munit:validation >
+			<flow-ref doc:name="Flow-ref to javaclasspocFlow" doc:id="e5e6c82a-36bd-48be-b7d4-9974682c5a1a" name="javaclasspocFlow" />
+			<munit-tools:verify-call doc:name="Verify call" doc:id="67bcce31-59e3-415d-9e2b-2b12943e60d0" processor="on-error-continue" atMost="1">
+				<munit-tools:with-attributes >
+					<munit-tools:with-attribute whereValue="aefef90b-42b2-43a2-9b90-bc929e76a22f" attributeName="doc:id" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+			<munit-tools:assert-that doc:name="Lirst Name Assert that" doc:id="6d576df4-a31c-46cc-a6d7-3a2335d91dc8" message="Issue with Last name validation test case" expression="#[payload]" is='#[MunitTools::equalTo({&#10;    "message": "Last Name cannot be blank"&#10;})]' />
+		</munit:validation>
+	</munit:test>
+
+</mule>
